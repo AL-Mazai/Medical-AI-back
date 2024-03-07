@@ -4,7 +4,7 @@ import SimpleITK as sitk
 import cv2
 import numpy as np
 
-from CTAI_model.data_set import make
+from CTAI_model.data_process import make
 
 
 def mkdir(path):

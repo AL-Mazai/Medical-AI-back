@@ -1,10 +1,11 @@
 import sys
 
 # sys.path.append("..")
+import cv2
 import torch
 from torch.nn import init
 from torch.utils.data import DataLoader
-from CTAI_model.data_set import make
+from CTAI_model.data_process import make
 from CTAI_model.net import unet
 from CTAI_model.utils import dice_loss
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 torch.set_num_threads(1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.cuda.empty_cache()
-res = {'epoch': [], 'loss': [], 'dice': []}
+res = {'epoch': [], 'loss': [], 'dice': [], 'val_dice': []}
 
 
 def weights_init(m):
@@ -32,11 +33,11 @@ def weights_init(m):
 
 
 # 参数
-rate = 0.50
+rate = 0.50  # 计算dice系数的阈值
 learn_rate = 0.001
 epochs = 100
 # train_dataset_path = '../data/all/d1/'
-train_dataset_path = '../data/1001/'
+train_dataset_path = '../data/1002/'
 train_dataset, test_dataset = make.get_d1(train_dataset_path)
 
 unet = unet.Unet(1, 1).to(device).apply(weights_init)
@@ -66,50 +67,43 @@ def train():
             loss.backward()
             optimizer.step()
 
-            # dice
-            # a = outputs.cpu().detach().squeeze(1).numpy()
-            # a[a >= rate] = 1
-            # a[a < rate] = 0
-            # b = y.cpu().detach().numpy()
-            # dice = dice_loss.dice(a, b)
-            # epoch_dice += dice
+            # loss
             epoch_loss += float(loss.item())
+            # dice
+            a = outputs.cpu().detach().squeeze(1).numpy()
+            a[a >= rate] = 1
+            a[a < rate] = 0
+            b = y.cpu().detach().squeeze(1).numpy()
+            dice = dice_loss.dice(a, b)
+            epoch_dice += dice
 
-            # if step % 1 == 0:
-                # res['epoch'].append((epoch + 1) * step)
-                # res['loss'].append(loss.item())
-                # print("epoch %d step%d/%d train_loss:%0.3f" % (
-                #     epoch + 1, step, (dt_size - 1) // dataloaders.batch_size + 1, loss.item()), end='\n')
-                # test()
+            # if step % 10 == 0:
+            # res['epoch'].append((epoch + 1) * step)
+            # res['loss'].append(loss.item())
+            # print("epoch %d step%d/%d train_loss:%0.3f" % (
+            #     epoch + 1, step, (dt_size - 1) // dataloaders.batch_size + 1, loss.item()), end='\n')
+            # test()
 
         res['epoch'].append(epoch + 1)
         res['loss'].append(loss.item())
-        print("epoch %d loss:%0.3f,dice %f" % (epoch + 1, epoch_loss / step, epoch_dice / step))
+        res['dice'].append(epoch_dice / step)
+        print("epoch %d loss:%0.3f,dice:%f" % (epoch + 1, epoch_loss / step, epoch_dice / step))
+        validate()
 
     # 保存模型
-    torch.save(unet.state_dict(), '/CTAI_flask/core/net/model_100.pth')
+    torch.save(unet.state_dict(), '../../CTAI_flask/core/net/model.pth')
     # 可视化
     plt.plot(res['epoch'], np.squeeze(res['loss']), label='Train loss')
-    plt.ylabel('loss')
-    plt.xlabel('epochs')
-    plt.title("Model: train loss")
+    plt.plot(res['epoch'], np.squeeze(res['dice']), label='Train dice', color='orange')
+    plt.plot(res['epoch'], np.squeeze(res['val_dice']), label='Validate dice', color='red')
+
+    plt.ylabel('value')
+    plt.xlabel('epoch')
     plt.legend()
     plt.show()
 
-    # plt.plot(res['epoch'], np.squeeze(res), label='Validation loss', color='#FF9966')
-    # plt.ylabel('loss')
-    # plt.xlabel('epochs')
-    # plt.title("Model:validation  loss")
-    # plt.legend()
 
-    # plt.savefig("examples.jpg")
-
-    # torch.save(unet, 'unet.pkl')
-    # model = torch.load('unet.pkl')
-    # test()
-
-
-def test():
+def validate():
     global res, img_y, mask_arrary
     epoch_dice = 0
     with torch.no_grad():
@@ -123,12 +117,12 @@ def test():
             img_y[img_y >= rate] = 1
             img_y[img_y < rate] = 0
             img_y = img_y * 255
+
             epoch_dice += dice_loss.dice(img_y, mask_arrary)
-            # cv.imwrite(f'data/out/{mask[0][0]}-result.png', img_y, (cv.IMWRITE_PNG_COMPRESSION, 0))
-        print('test dice %f' % (epoch_dice / len(dataloaders)))
-        res['dice'].append(epoch_dice / len(dataloaders))
+            cv2.imwrite(f'../data/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
+        print('val dice:%f' % (epoch_dice / len(dataloaders)))
+        res['val_dice'].append(epoch_dice / len(dataloaders))
 
 
 if __name__ == '__main__':
     train()
-    # test()

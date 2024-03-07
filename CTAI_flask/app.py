@@ -56,6 +56,7 @@ def upload_file():
         shutil.copy(src_path, 'tmp/ct')
         image_path = os.path.join('tmp/ct', new_filename)
         pid, image_info = core.main.c_main(image_path, current_app.model)
+
         return jsonify({'status': 1,
                         'image_url': 'http://127.0.0.1:5003/tmp/image/' + pid,
                         'draw_url': 'http://127.0.0.1:5003/tmp/draw/' + pid,
@@ -91,9 +92,9 @@ def init_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = net.Unet(1, 1).to(device)
     if torch.cuda.is_available():
-        model.load_state_dict(torch.load("core/net/model_100.pth"))
+        model.load_state_dict(torch.load("core/net/model.pth"))
     else:
-        model.load_state_dict(torch.load("core/net/model_100.pth", map_location='cpu'))
+        model.load_state_dict(torch.load("core/net/model.pth", map_location='cpu'))
     model.eval()
     return model
 

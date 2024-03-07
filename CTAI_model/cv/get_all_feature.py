@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("..")
-from CTAI_model.data_set.make import get_person_files
+from CTAI_model.data_process.make import get_person_files
 import cv2
 import numpy as np
 import SimpleITK as sitk

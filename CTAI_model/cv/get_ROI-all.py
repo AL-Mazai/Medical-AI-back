@@ -2,7 +2,7 @@ import SimpleITK as sitk
 import cv2
 import numpy as np
 
-from CTAI_model.data_set.make import get_train_files
+from CTAI_model.data_process.make import get_train_files
 
 # 跑train不加第二个train
 # train_data_path = '../data/train/train/'

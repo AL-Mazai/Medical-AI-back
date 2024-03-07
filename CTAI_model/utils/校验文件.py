@@ -9,8 +9,10 @@ def get_train_files(data_path, file_type='dcm', all=True):
     for dir in dir_list:
         # 所有数据跑
         if all:
-            temp = os.listdir(dir + '/arterial phase')
-            filename_list.extend([dir + '/arterial phase/' + name for name in temp])
+            # temp = os.listdir(dir + '/arterial phase')
+            temp = os.listdir(dir)
+            # filename_list.extend([dir + '/arterial phase/' + name for name in temp])
+            filename_list.extend([dir + '/' + name for name in temp])
         if not all:
             filename_list.append(dir)
             # temp = os.listdir(dir)
@@ -28,7 +30,7 @@ def get_train_files(data_path, file_type='dcm', all=True):
 
 
 if __name__ == '__main__':
-    a, _ = get_train_files('../data/all/d2/')
+    a, _ = get_train_files('../data/1001/')
     _, b = get_train_files('../data/out/')
 
     for i in range(len(a)):
