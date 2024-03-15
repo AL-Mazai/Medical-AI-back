@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # image = sitk.ReadImage('../data/train/train/10087.dcm')
-image = sitk.ReadImage('../data/1001/arterial phase/10001.dcm')
+image = sitk.ReadImage('../data/1001/arterial phase/10012.dcm')
 image = sitk.GetArrayFromImage(image)[0, :, :]
 
 image[image < -300] = 0

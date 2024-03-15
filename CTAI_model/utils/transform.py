@@ -14,7 +14,7 @@ def mkdir(path):
 
 
 # filename_list = make.get_person_files('../data/all/d2/')
-filename_list = make.get_person_files('../data/')
+filename_list = make.get_person_files('../data/1001/')
 for i in filename_list:
     pid = i[0]
     print(pid)

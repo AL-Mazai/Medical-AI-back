@@ -11,6 +11,7 @@ from CTAI_model.utils import dice_loss
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import torch.nn.functional as F
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
@@ -18,7 +19,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 torch.set_num_threads(1)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.cuda.empty_cache()
-res = {'epoch': [], 'loss': [], 'dice': [], 'val_dice': []}
+res = {'epoch': [], 'loss': [], 'dice': [], 'val_dice': [], 'val_loss': []}
 
 
 def weights_init(m):
@@ -32,25 +33,43 @@ def weights_init(m):
         init.constant_(m.bias.data, 0.0)
 
 
+class DiceBCELoss(torch.nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(DiceBCELoss, self).__init__()
+
+    def forward(self, inputs, targets, smooth=1):
+        inputs = torch.sigmoid(inputs)
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        intersection = (inputs * targets).sum()
+        dice_loss = 1 - (2. * intersection + smooth) / (inputs.sum() + targets.sum() + smooth)
+        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
+        Dice_BCE = BCE + dice_loss
+
+        return Dice_BCE
+
+
 # 参数
 rate = 0.50  # 计算dice系数的阈值
 learn_rate = 0.001
-epochs = 100
+batch_size = 2
+epochs = 2
 # train_dataset_path = '../data/all/d1/'
-train_dataset_path = '../data/1002/'
+train_dataset_path = '../data/1001/'
 train_dataset, test_dataset = make.get_d1(train_dataset_path)
 
 unet = unet.Unet(1, 1).to(device).apply(weights_init)
 criterion = torch.nn.BCELoss().to(device)
+# criterion = DiceBCELoss().to(device)
 optimizer = torch.optim.Adam(unet.parameters(), learn_rate)
 
 
 def train():
     global res
-    dataloaders = DataLoader(train_dataset, batch_size=2, shuffle=True, num_workers=0)
+    dataloaders = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     for epoch in range(epochs):
-        dt_size = len(dataloaders.dataset)
         epoch_loss, epoch_dice = 0, 0
+        best_dice = 0
         step = 0
         for x, y in dataloaders:
             id = x[1:]
@@ -58,9 +77,8 @@ def train():
             x = x[0].to(device)
             y = y[1].to(device)
             # TODO
-            y = y.reshape(2, 1, 512, 512)
-            # print(x.size())
-            # print(y.size())
+            # y = y.reshape(2, 1, 512, 512)
+            y = y.unsqueeze(1)
             optimizer.zero_grad()
             outputs = unet(x)
             loss = criterion(outputs, y)
@@ -75,53 +93,73 @@ def train():
             a[a < rate] = 0
             b = y.cpu().detach().squeeze(1).numpy()
             dice = dice_loss.dice(a, b)
+            # print("dice:%f", dice)
             epoch_dice += dice
 
-            # if step % 10 == 0:
-            # res['epoch'].append((epoch + 1) * step)
-            # res['loss'].append(loss.item())
-            # print("epoch %d step%d/%d train_loss:%0.3f" % (
-            #     epoch + 1, step, (dt_size - 1) // dataloaders.batch_size + 1, loss.item()), end='\n')
-            # test()
+            if step % 50 == 0:
+                print("dice:%f", epoch_dice / step)
+
 
         res['epoch'].append(epoch + 1)
         res['loss'].append(loss.item())
         res['dice'].append(epoch_dice / step)
+
+        # 保存dice最好的模型
+        if epoch_dice > best_dice:
+            best_dice = epoch_dice
+            torch.save(unet.state_dict(), '../../CTAI_model/net/model.pth')
+
         print("epoch %d loss:%0.3f,dice:%f" % (epoch + 1, epoch_loss / step, epoch_dice / step))
+        # 验证
         validate()
 
-    # 保存模型
-    torch.save(unet.state_dict(), '../../CTAI_flask/core/net/model.pth')
+
     # 可视化
     plt.plot(res['epoch'], np.squeeze(res['loss']), label='Train loss')
     plt.plot(res['epoch'], np.squeeze(res['dice']), label='Train dice', color='orange')
+
     plt.plot(res['epoch'], np.squeeze(res['val_dice']), label='Validate dice', color='red')
+    plt.plot(res['epoch'], np.squeeze(res['val_loss']), label='Validate loss', color='yellow')
 
     plt.ylabel('value')
     plt.xlabel('epoch')
     plt.legend()
+
+    # 保存图形
+    plt.savefig('result.png')
     plt.show()
 
 
 def validate():
     global res, img_y, mask_arrary
     epoch_dice = 0
+    epoch_loss = 0
+
     with torch.no_grad():
-        dataloaders = DataLoader(test_dataset, batch_size=1, shuffle=True, num_workers=0)
+        dataloaders = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         for x, mask in dataloaders:
-            id = x[1:]  # ('1026',), ('10018',)]先病人号后片号
+            # id = x[1:]  # ('1026',), ('10018',)]先病人号后片号
             x = x[0].to(device)
             y = unet(x)
-            mask_arrary = mask[1].cpu().squeeze(0).detach().numpy()
-            img_y = torch.squeeze(y).cpu().numpy()
-            img_y[img_y >= rate] = 1
-            img_y[img_y < rate] = 0
-            img_y = img_y * 255
 
-            epoch_dice += dice_loss.dice(img_y, mask_arrary)
-            cv2.imwrite(f'../data/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
-        print('val dice:%f' % (epoch_dice / len(dataloaders)))
+            # loss
+            # mask[1] = mask[1].reshape(2, 1, 512, 512).to(device)
+            mask[1] = mask[1].unsqueeze(1).to(device)
+            loss = criterion(y, mask[1])
+            epoch_loss += float(loss.item())
+
+            # dice
+            a = y.cpu().detach().squeeze(1).numpy()
+            a[a >= rate] = 1
+            a[a < rate] = 0
+            a = a * 255
+            b = mask[1].cpu().squeeze(1).detach().numpy()
+            epoch_dice += dice_loss.dice(a, b)
+            # cv2.imwrite(f'../data/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
+
+        print('val loss:%f ,val dice:%f' % (epoch_loss / len(dataloaders), epoch_dice / len(dataloaders)))
         res['val_dice'].append(epoch_dice / len(dataloaders))
+        res['val_loss'].append(epoch_loss / len(dataloaders))
 
 
 if __name__ == '__main__':

@@ -25,8 +25,10 @@ def get_person_files(data_path):
         filename_list = []
         image_list, mask_list, = [], []
         # 所有数据跑
-        temp = os.listdir(dir + '/arterial phase')
-        filename_list.extend([dir + '/arterial phase/' + name for name in temp])
+        # temp = os.listdir(dir + '/arterial phase')
+        temp = os.listdir(dir)
+        # filename_list.extend([dir + '/arterial phase/' + name for name in temp])
+        filename_list.extend([dir + '/' + name for name in temp])
         for i in filename_list:
             if '.dcm' in i:
                 image_list.append(i)
@@ -42,6 +44,7 @@ def get_person_files(data_path):
 def data_in_one(inputdata):
     if not inputdata.any():
         return inputdata
+
     inputdata = (inputdata - inputdata.min()) / (inputdata.max() - inputdata.min())
     return inputdata
 
@@ -121,14 +124,16 @@ def get_dataset(data_path, have):
         image = sitk.ReadImage(i[0])
         image_array = sitk.GetArrayFromImage(image)
 
-        mask = i[0].replace('.dcm', '_mask.png')
+        mask_path = i[0].replace('.dcm', '_mask.png')
         # 方法中文件路径不能有中文，否则读取不到文件！！！
-        mask_array = cv.imread(mask, cv.IMREAD_GRAYSCALE)
+        mask_array = cv.imread(mask_path, cv.IMREAD_GRAYSCALE)
 
+        #  mask_array为空、0、false则返回false，则不继续运行后面代码
         if have:
             if not mask_array.any():
                 continue
 
+        # 有效数据的预处理
         mask_array = data_in_one(mask_array)
         mask_tensor = torch.from_numpy(mask_array).float()
         j = i[0].split('/')[-1].replace('_mask.png', '')
@@ -136,9 +141,12 @@ def get_dataset(data_path, have):
 
         ROI_mask = np.zeros(shape=image_array.shape)
         ROI_mask_mini = np.zeros(shape=(1, 160, 100))
+        # ROI_mask_mini = np.zeros(shape=(1, 512, 512))
         ROI_mask_mini[0] = image_array[0][270:430, 200:300]
+        # ROI_mask_mini[0] = image_array[0][0:, 0:]
         ROI_mask_mini = data_in_one(ROI_mask_mini)
         ROI_mask[0][270:430, 200:300] = ROI_mask_mini[0]
+        # ROI_mask[0][0:, 0:] = ROI_mask_mini[0]
         test_image = ROI_mask
         image_tensor = torch.from_numpy(ROI_mask).float()
         image_data.append((image_tensor, i[1], i[2]))

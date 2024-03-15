@@ -31,6 +31,7 @@ class Unet(nn.Module):
         self.conv4 = DoubleConv(256, 512)
         self.pool4 = nn.MaxPool2d(2)
         self.conv5 = DoubleConv(512, 1024)
+
         self.up6 = nn.ConvTranspose2d(1024, 512, 2, stride=2)
         self.conv6 = DoubleConv(1024, 512)
         self.up7 = nn.ConvTranspose2d(512, 256, 2, stride=2)
@@ -51,6 +52,7 @@ class Unet(nn.Module):
         c4 = self.conv4(p3)
         p4 = self.pool4(c4)
         c5 = self.conv5(p4)
+
         up_6 = self.up6(c5)
         merge6 = torch.cat([up_6, c4], dim=1)
         c6 = self.conv6(merge6)
