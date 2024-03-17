@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("..")
-from CTAI_model.data_process.make import get_person_files
+from CTAI_model.process.process import get_person_files
 import cv2
 import numpy as np
 import SimpleITK as sitk
@@ -12,7 +12,7 @@ import csv
 
 np.set_printoptions(suppress=True)  # 输出时禁止科学表示法，直接输出小数值
 
-# mask_data_path = '../data/all/d2/'
+# mask_data_path = '../data_test/all/d2/'
 mask_data_path = '../data/'
 
 # ID为第一个字段名会会让xlsx报错

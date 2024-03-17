@@ -2,14 +2,14 @@ import SimpleITK as sitk
 import cv2
 import numpy as np
 
-from CTAI_model.data_process.make import get_train_files
+from CTAI_model.process.process import get_train_files
 
 # 跑train不加第二个train
-# train_data_path = '../data/train/train/'
+# train_data_path = '../data_test/train/train/'
 train_data_path = '../data/1001/'
 
 
-# train_data_path = '../data/CT/'
+# train_data_path = '../data_test/CT/'
 
 
 def get_roi(path):

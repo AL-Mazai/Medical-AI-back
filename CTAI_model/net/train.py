@@ -5,7 +5,7 @@ import cv2
 import torch
 from torch.nn import init
 from torch.utils.data import DataLoader
-from CTAI_model.data_process import make
+from CTAI_model.process import process
 from CTAI_model.net import unet
 from CTAI_model.utils import dice_loss
 import matplotlib.pyplot as plt
@@ -54,7 +54,7 @@ rate = 0.50  # 计算dice系数的阈值
 learn_rate = 0.001
 batch_size = 2
 epochs = 2
-# train_dataset_path = '../data/all/d1/'
+# train_dataset_path = '../data_test/all/d1/'
 train_dataset_path = '../data/1001/'
 train_dataset, test_dataset = make.get_d1(train_dataset_path)
 
@@ -155,7 +155,7 @@ def validate():
             a = a * 255
             b = mask[1].cpu().squeeze(1).detach().numpy()
             epoch_dice += dice_loss.dice(a, b)
-            # cv2.imwrite(f'../data/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
+            # cv2.imwrite(f'../data_test/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
 
         print('val loss:%f ,val dice:%f' % (epoch_loss / len(dataloaders), epoch_dice / len(dataloaders)))
         res['val_dice'].append(epoch_dice / len(dataloaders))

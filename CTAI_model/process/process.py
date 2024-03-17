@@ -11,7 +11,7 @@ from torch.utils.data import random_split
 train_data_path = '../data/1001/'
 
 
-# test_data_path = '../data/test/'
+# test_data_path = '../data_test/tumor_data_test/'
 
 
 def get_person_files(data_path):

@@ -4,7 +4,7 @@ import cv2
 # sys.path.append("..")
 import torch
 from torch.utils.data import DataLoader
-from CTAI_model.data_process import make
+from CTAI_model.process import process
 from CTAI_model.net.unet import Unet
 from CTAI_model.utils import dice_loss
 import matplotlib.pyplot as plt
@@ -17,7 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.cuda.empty_cache()
 res = {'epoch': [], 'loss': [], 'dice': []}
 
-test_data_path = '../data/test/'
+test_data_path = '../data/tumor_data_test/'
 test_dataset = make.get_d1_local(test_data_path)
 # 计算dice系数的阈值
 rate = 0.5
@@ -71,11 +71,11 @@ def test():
             # else:
             epoch_dice += dice
             print("dice:%f" % dice_loss.dice(predict, target))
-            # cv2.imwrite(f'../data/out/{id[0][0]}/arterial phase/{id[1][0]}_mask.png', predict,
+            # cv2.imwrite(f'../data_test/out/{id[0][0]}/arterial phase/{id[1][0]}_mask.png', predict,
             #             (cv2.IMWRITE_PNG_COMPRESSION, 0))
 
     print("avg_dice:%f" % (epoch_dice / len(dataloaders)))
-    # mkdir(f'../data/out/{id[0][0]}/arterial phase/')
+    # mkdir(f'../data_test/out/{id[0][0]}/arterial phase/')
 
 
 if __name__ == '__main__':

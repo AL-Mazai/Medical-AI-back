@@ -2,8 +2,6 @@ import os
 import sys
 import cv2
 import torch
-import CTAI_flask.core.net.unet as net
-import numpy as np
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 torch.set_num_threads(4)

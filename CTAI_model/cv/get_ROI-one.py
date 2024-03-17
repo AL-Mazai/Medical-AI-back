@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# image = sitk.ReadImage('../data/train/train/10087.dcm')
+# image = sitk.ReadImage('../data_test/train/train/10087.dcm')
 image = sitk.ReadImage('../data/1001/arterial phase/10012.dcm')
 image = sitk.GetArrayFromImage(image)[0, :, :]
 

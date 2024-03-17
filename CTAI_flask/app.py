@@ -6,7 +6,7 @@ from datetime import timedelta
 import torch
 from flask import *
 import core.main
-import core.net.unet as net
+from CTAI_model.net import unet as net
 
 UPLOAD_FOLDER = r'uploads'
 
@@ -69,7 +69,7 @@ def upload_file():
 @app.route("/download", methods=['GET'])
 def download_file():
     # 需要知道2个参数, 第1个参数是本地目录的path, 第2个参数是文件名(带扩展名)
-    return send_from_directory('data', 'testfile.zip', as_attachment=True)
+    return send_from_directory('data_test', 'testfile.zip', as_attachment=True)
 
 
 # show photo
@@ -92,9 +92,9 @@ def init_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = net.Unet(1, 1).to(device)
     if torch.cuda.is_available():
-        model.load_state_dict(torch.load("core/net/model-150.pth"))
+        model.load_state_dict(torch.load("core/model_100.pth"))
     else:
-        model.load_state_dict(torch.load("core/net/model-100.pth", map_location='cpu'))
+        model.load_state_dict(torch.load("core/model_100.pth.pth", map_location='cpu'))
     model.eval()
     return model
 

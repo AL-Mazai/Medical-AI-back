@@ -9,7 +9,7 @@ with open('../result/0.50nohup50.txt', 'r') as f:
 for i in range(len(data)):
     if i % 3 == 0:
         x = data[i].split(' ')
-        data_true.append([x[2].replace('test', '').replace('train_loss:', ''), x[-1]])
+        data_true.append([x[2].replace('tumor_data_test', '').replace('train_loss:', ''), x[-1]])
 
 print(data_true)
 
