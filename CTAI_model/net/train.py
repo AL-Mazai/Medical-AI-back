@@ -55,8 +55,8 @@ learn_rate = 0.001
 batch_size = 2
 epochs = 2
 # train_dataset_path = '../data_test/all/d1/'
-train_dataset_path = '../data/1001/'
-train_dataset, test_dataset = make.get_d1(train_dataset_path)
+train_dataset_path = '../data/tumor_data_train/'
+train_dataset, test_dataset = process.get_d1(train_dataset_path)
 
 unet = unet.Unet(1, 1).to(device).apply(weights_init)
 criterion = torch.nn.BCELoss().to(device)
@@ -69,7 +69,7 @@ def train():
     dataloaders = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     for epoch in range(epochs):
         epoch_loss, epoch_dice = 0, 0
-        best_dice = 0
+        # best_dice = 0
         step = 0
         for x, y in dataloaders:
             id = x[1:]
@@ -101,13 +101,13 @@ def train():
 
 
         res['epoch'].append(epoch + 1)
-        res['loss'].append(loss.item())
+        res['loss'].append(loss.item() * 10)
         res['dice'].append(epoch_dice / step)
 
         # 保存dice最好的模型
-        if epoch_dice > best_dice:
-            best_dice = epoch_dice
-            torch.save(unet.state_dict(), '../../CTAI_model/net/model.pth')
+        # if epoch_dice > best_dice:
+        #     best_dice = epoch_dice
+        #     torch.save(unet.state_dict(), '../../CTAI_model/net/model.pth')
 
         print("epoch %d loss:%0.3f,dice:%f" % (epoch + 1, epoch_loss / step, epoch_dice / step))
         # 验证
@@ -136,6 +136,7 @@ def validate():
     epoch_loss = 0
 
     with torch.no_grad():
+        best_dice = 0
         dataloaders = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         for x, mask in dataloaders:
             # id = x[1:]  # ('1026',), ('10018',)]先病人号后片号
@@ -155,7 +156,10 @@ def validate():
             a = a * 255
             b = mask[1].cpu().squeeze(1).detach().numpy()
             epoch_dice += dice_loss.dice(a, b)
-            # cv2.imwrite(f'../data_test/out/{mask[0][0]}-result.png', img_y, (cv2.IMWRITE_PNG_COMPRESSION, 0))
+
+        if epoch_dice > best_dice:
+            best_dice = epoch_dice
+            torch.save(unet.state_dict(), '../../CTAI_model/net/model.pth')
 
         print('val loss:%f ,val dice:%f' % (epoch_loss / len(dataloaders), epoch_dice / len(dataloaders)))
         res['val_dice'].append(epoch_dice / len(dataloaders))

@@ -18,14 +18,14 @@ process_probability = 1
 #
 # 1、旋转
 # 1.1 不带裁剪的旋转
-# p.rotate_without_crop(probability=process_probability, max_left_rotation=60, max_right_rotation=60)
+p.rotate_without_crop(probability=process_probability, max_left_rotation=60, max_right_rotation=60)
 # 1.2 带裁剪的旋转
 # p.rotate(probability=process_probability, max_left_rotation=25, max_right_rotation=25)
 # 1.3 旋转90°
 # p.rotate_random_90(probability=process_probability)
 #
 # 2、缩放
-# p.zoom(probability=process_probability, min_factor=0.6, max_factor=1.5)
+p.zoom(probability=process_probability, min_factor=0.6, max_factor=1.5)
 #
 # # 3、裁剪
 # # 3.1 按大小裁剪
@@ -38,7 +38,7 @@ process_probability = 1
 #
 # 4、翻转
 # 4.1 水平翻转
-# p.flip_left_right(probability=process_probability)
+p.flip_left_right(probability=process_probability)
 #========================================================================
 #
 # 4.2 上下翻转
@@ -52,10 +52,10 @@ process_probability = 1
 #========================================================================
 #
 # 6、颜色增强/减弱
-p.random_color(probability=process_probability, min_factor=0.0, max_factor=1.5)
+# p.random_color(probability=process_probability, min_factor=0.0, max_factor=1.5)
 #
 # 7、对比度增强/减弱
-p.random_contrast(probability=process_probability, min_factor=0.7, max_factor=1.2)
+# p.random_contrast(probability=process_probability, min_factor=0.7, max_factor=1.2)
 #
 # # 8、错切形变
 # p.shear(probability=process_probability,max_shear_left=15,max_shear_right=15)

@@ -18,7 +18,7 @@ torch.cuda.empty_cache()
 res = {'epoch': [], 'loss': [], 'dice': []}
 
 test_data_path = '../data/tumor_data_test/'
-test_dataset = make.get_d1_local(test_data_path)
+test_dataset = process.get_d1_local(test_data_path)
 # 计算dice系数的阈值
 rate = 0.5
 

@@ -10,6 +10,7 @@ output_dir = "../data/augment_data_test/output_new"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+count = 0
 # 遍历输入目录
 for filename in os.listdir(input_dir):
     # 匹配肿瘤图片文件名格式
@@ -37,14 +38,16 @@ for filename in os.listdir(input_dir):
         source_file_path = os.path.join(input_dir, source_filename)
 
         # 构建重命名后的标签文件名
-        new_source_filename = f"{suffix}.png"
+        new_source_filename = f"{count}.png"
         new_source_file_path = os.path.join(output_dir, new_source_filename)
-        new_label_filename = f"{suffix}_mask.png"
+        new_label_filename = f"{count}_mask.png"
         new_label_file_path = os.path.join(output_dir, new_label_filename)
 
         # 重命名数据文件和标签文件
         os.rename(label_file_path, new_label_file_path)
         os.rename(source_file_path, new_source_file_path)
+
+        count = count + 1
 
         print(f"Renamed label file: {label_file_path} -> {new_label_file_path}")
     else:
