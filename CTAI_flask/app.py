@@ -92,9 +92,9 @@ def init_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = net.Unet(1, 1).to(device)
     if torch.cuda.is_available():
-        model.load_state_dict(torch.load("core/model_100.pth"))
+        model.load_state_dict(torch.load("core/model.pth"))
     else:
-        model.load_state_dict(torch.load("core/model_100.pth.pth", map_location='cpu'))
+        model.load_state_dict(torch.load("core/model.pth.pth", map_location='cpu'))
     model.eval()
     return model
 

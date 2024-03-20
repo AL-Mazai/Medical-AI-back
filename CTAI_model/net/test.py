@@ -75,7 +75,6 @@ def test():
             #             (cv2.IMWRITE_PNG_COMPRESSION, 0))
 
     print("avg_dice:%f" % (epoch_dice / len(dataloaders)))
-    # mkdir(f'../data_test/out/{id[0][0]}/arterial phase/')
 
 
 if __name__ == '__main__':

@@ -53,9 +53,9 @@ class DiceBCELoss(torch.nn.Module):
 rate = 0.50  # 计算dice系数的阈值
 learn_rate = 0.001
 batch_size = 2
-epochs = 2
+epochs = 30
 # train_dataset_path = '../data_test/all/d1/'
-train_dataset_path = '../data/tumor_data_train/'
+train_dataset_path = '../data/tumor_data_test/'
 train_dataset, test_dataset = process.get_d1(train_dataset_path)
 
 unet = unet.Unet(1, 1).to(device).apply(weights_init)
@@ -96,7 +96,7 @@ def train():
             # print("dice:%f", dice)
             epoch_dice += dice
 
-            if step % 50 == 0:
+            if step % 5 == 0:
                 print("dice:%f", epoch_dice / step)
 
 
@@ -159,7 +159,7 @@ def validate():
 
         if epoch_dice > best_dice:
             best_dice = epoch_dice
-            torch.save(unet.state_dict(), '../../CTAI_model/net/model.pth')
+            torch.save(unet.state_dict(), '../../CTAI_flask/core/model.pth')
 
         print('val loss:%f ,val dice:%f' % (epoch_loss / len(dataloaders), epoch_dice / len(dataloaders)))
         res['val_dice'].append(epoch_dice / len(dataloaders))

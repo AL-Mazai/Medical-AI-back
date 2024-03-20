@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import torch
+import torch.nn.functional as F
 
 
 def dice(predict, target):
@@ -23,6 +24,22 @@ def dice(predict, target):
     return np.round(res, 5)
 
 
+ALPHA = 0.6
+GAMMA = 2
+class FocalLoss(torch.nn.Module):
+    def __init__(self, weight=None, size_average=True):
+        super(FocalLoss, self).__init__()
+
+    def forward(self, inputs, targets, alpha=ALPHA, gamma=GAMMA, smooth=1):
+        inputs = F.sigmoid(inputs)
+        inputs = inputs.view(-1)
+        targets = targets.view(-1)
+        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
+        BCE_EXP = torch.exp(-BCE)
+        focal_loss = alpha * (1 - BCE_EXP) ** gamma * BCE
+
+        return focal_loss
+
 def read_image(file_path):
     image = cv2.imread(file_path)
     return image
@@ -42,11 +59,11 @@ if __name__ == '__main__':
     image1_tensor = torch.from_numpy(image1).float()
     image2_tensor = torch.from_numpy(image2).float()
 
-    # dice = DiceLoss()
+    dice = FocalLoss()
     # iou = SoftDiceLoss()
     #
     # # 自定义及计算dice损失
-    # dice_value1 = dice_coef_loss(image1_tensor, image2_tensor)
-    # print(dice_value1.item())
+    dice_value1 = dice(image1_tensor, image2_tensor)
+    print(dice_value1.item())
     # dice_value2 = iou(image1_tensor, image2_tensor)
     # print(dice_value2.item())
