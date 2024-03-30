@@ -35,3 +35,6 @@ webencodings==0.5.1
 
 numpy~=1.26.4
 pillow~=10.2.0
+flask~=3.0.2
+pandas~=2.2.1
+numba~=0.59.1

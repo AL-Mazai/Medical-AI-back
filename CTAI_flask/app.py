@@ -7,13 +7,15 @@ import torch
 from flask import *
 import core.main
 from CTAI_model.net import unet as net
-
+from hjd.doctor import doctor
 UPLOAD_FOLDER = r'uploads'
 
 ALLOWED_EXTENSIONS = set(['dcm'])
 app = Flask(__name__)
 app.secret_key = 'secret!'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+app.register_blueprint(doctor)
 
 werkzeug_logger = rel_log.getLogger('werkzeug')
 werkzeug_logger.setLevel(rel_log.ERROR)
@@ -102,4 +104,4 @@ def init_model():
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = init_model()
-    app.run(host='127.0.0.1', port=5003, debug=True)
+    app.run(host='127.0.0.1', port=8080, debug=True)
