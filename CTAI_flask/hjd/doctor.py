@@ -69,20 +69,27 @@ def getPatients():
     # 获取分页参数
     page = request.args.get('page', default=1, type=int)
     page_size = request.args.get('page_size', default=10, type=int)
+    doctor_id=request.args.get('doctorId')
+
     offset = (page - 1) * page_size
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
 
     # 构建 SQL 查询语句
-    sql_query = "SELECT * FROM patient WHERE username LIKE %s LIMIT %s OFFSET %s"
-    cursor.execute(sql_query, (keyword, page_size, offset))
+    sql_query = """SELECT patient.* FROM patient INNER JOIN doctor_patient 
+        ON patient.patient_id = doctor_patient.patient_id 
+        WHERE doctor_patient.doctor_id = %s AND patient.username LIKE %s 
+        LIMIT %s OFFSET %s"""
+    cursor.execute(sql_query, (doctor_id,keyword, page_size, offset))
 
     # 获取查询结果
     patients = cursor.fetchall()
 
     # 获取总记录数
-    cursor.execute("SELECT COUNT(*) AS total_count FROM patient WHERE username LIKE %s", (keyword,))
+    cursor.execute(
+        "SELECT COUNT(*) AS total_count FROM patient INNER JOIN doctor_patient ON patient.patient_id = doctor_patient.patient_id WHERE doctor_patient.doctor_id = %s AND patient.username LIKE %s",
+        (doctor_id, keyword,))
     total_count = cursor.fetchone()['total_count']
 
     # 计算总页数
@@ -165,7 +172,7 @@ def getDiagnosis():
                 patient.phone_number, patient.username
         FROM diagnose_record
         JOIN patient ON diagnose_record.patient_id = patient.patient_id
-        WHERE doctor_id=%s
+        WHERE doctor_id=%s AND status=1
         LIMIT %s OFFSET %s
     """
     cursor.execute(sql_query, (doctorId,page_size, offset))
@@ -195,3 +202,35 @@ def getDiagnosis():
 
     # 返回响应
     return jsonify(response_data)
+
+@doctor.route('/getDiagnosisDetail', methods=['GET'])
+def getDiagnosisDetail():
+    # 获取诊断参数
+    diagnosis_id= request.args.get('diagnosisId', type=int)
+
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # 构建 SQL 查询语句，使用 JOIN 连接相关表
+    sql_query = """
+        SELECT *
+        FROM diagnose_record ,patient
+        WHERE diagnose_record.patient_id=patient.patient_id and diagnose_record_id=%s and status=1
+    """
+    cursor.execute(sql_query, (diagnosis_id,))
+
+    # 获取查询结果
+    records = cursor.fetchall()
+
+    # 获取总记录数
+
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    # 构造响应数据
+
+
+    # 返回响应
+    return jsonify(records)
