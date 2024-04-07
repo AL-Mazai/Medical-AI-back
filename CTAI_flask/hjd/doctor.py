@@ -234,3 +234,72 @@ def getDiagnosisDetail():
 
     # 返回响应
     return jsonify(records)
+
+@doctor.route('/updateDiagnosisDetail',methods=['PUT'])
+def updateDiagnosisDetail():
+    diagnosis_id = request.args.get('diagnosisId', type=int)
+    diagnose_result=request.args.get('diagnose_result', type=str)
+    illness_description=request.args.get('illness_description', type=str)
+    treatment_plan=request.args.get('treatment_plan', type=str)
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # 构建 SQL 查询语句，使用 JOIN 连接相关表
+    sql_query = """
+            UPDATE diagnose_record 
+            SET diagnose_result = %s,
+            illness_description = %s,
+            treatment_plan = %s
+            WHERE diagnose_record_id = %s AND status = 1;
+        """
+    # 执行更新操作
+    cursor.execute(sql_query, (diagnose_result,illness_description,treatment_plan,diagnosis_id,))
+    # 提交事务
+    connection.commit()
+
+    # 检查更新是否成功
+    if cursor.rowcount == 0:
+        response = {"message": "No record found for the given diagnosis ID or status is not 1"}
+    else:
+        response = {"message": "Diagnosis record updated successfully"}
+
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    # 返回响应
+    return jsonify(response)
+
+@doctor.route('/deleteDiagnosisDetail', methods=['PUT'])
+def deleteDiagnosisDetail():
+    # 获取诊断参数
+    diagnosis_id = request.args.get('diagnosisId', type=int)
+
+    # 获取数据库连接和游标
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # 构建 SQL 更新语句，将状态标记为 0
+    sql_query = """
+        UPDATE diagnose_record 
+        SET status = 0
+        WHERE diagnose_record_id = %s AND status = 1;
+    """
+    # 执行更新操作
+    cursor.execute(sql_query, (diagnosis_id,))
+    # 提交事务
+    connection.commit()
+
+    # 检查更新是否成功
+    if cursor.rowcount == 0:
+        response = {"message": "No record found for the given diagnosis ID or status is not 1"}
+    else:
+        response = {"message": "Diagnosis record marked as deleted successfully"}
+
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    # 返回响应
+    return jsonify(response)
