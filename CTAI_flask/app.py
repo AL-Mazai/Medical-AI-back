@@ -104,4 +104,4 @@ def init_model():
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = init_model()
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='127.0.0.1', port=5003, debug=True)

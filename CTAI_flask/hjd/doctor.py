@@ -181,7 +181,7 @@ def getDiagnosis():
     records = cursor.fetchall()
 
     # 获取总记录数
-    cursor.execute("SELECT COUNT(*) AS total_count FROM diagnose_record")
+    cursor.execute("SELECT COUNT(*) AS total_count FROM diagnose_record JOIN patient ON diagnose_record.patient_id = patient.patient_id WHERE doctor_id=%s AND status=1",(doctorId,)    )
     total_count = cursor.fetchone()['total_count']
 
     # 计算总页数
