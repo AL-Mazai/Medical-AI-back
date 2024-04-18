@@ -235,26 +235,31 @@ def getDiagnosisDetail():
     # 返回响应
     return jsonify(records)
 
-@doctor.route('/updateDiagnosisDetail',methods=['PUT'])
+@doctor.route('/updateDiagnosisDetail',methods=['POST'])
 def updateDiagnosisDetail():
-    diagnosis_id = request.args.get('diagnosisId', type=int)
-    diagnose_result=request.args.get('diagnose_result', type=str)
-    illness_description=request.args.get('illness_description', type=str)
-    treatment_plan=request.args.get('treatment_plan', type=str)
-
+    diagnosis_id = request.form.get('diagnosisId', type=int)
+    diagnose_result = request.form.get('diagnose_result')
+    illness_description = request.form.get('illness_description')
+    treatment_plan = request.form.get('treatment_plan')
+    original_image_link = request.form.get('original_image_link')
+    mark_image_link = request.form.get('mark_image_link')
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-
+    # print(diagnosis_id)
+    # print(diagnosis_id,diagnose_result,illness_description,request.data)
     # 构建 SQL 查询语句，使用 JOIN 连接相关表
     sql_query = """
             UPDATE diagnose_record 
             SET diagnose_result = %s,
             illness_description = %s,
-            treatment_plan = %s
+            treatment_plan = %s,
+            original_image_link=%s,
+            mark_image_link=%s
             WHERE diagnose_record_id = %s AND status = 1;
         """
     # 执行更新操作
-    cursor.execute(sql_query, (diagnose_result,illness_description,treatment_plan,diagnosis_id,))
+    cursor.execute(sql_query,
+                   (diagnose_result,illness_description,treatment_plan,original_image_link,mark_image_link,diagnosis_id,))
     # 提交事务
     connection.commit()
 

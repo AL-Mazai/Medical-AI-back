@@ -6,9 +6,11 @@ from datetime import timedelta
 import torch
 from flask import *
 import core.main
+import base64
 from CTAI_model.net import unet as net
 from hjd.doctor import doctor
 UPLOAD_FOLDER = r'uploads'
+
 
 ALLOWED_EXTENSIONS = set(['dcm'])
 app = Flask(__name__)
@@ -59,9 +61,18 @@ def upload_file():
         image_path = os.path.join('tmp/ct', new_filename)
         pid, image_info = core.main.c_main(image_path, current_app.model)
 
+        # 将识别出来的文件转换为base64编码
+        with open(f'tmp/image/{pid}', "rb") as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+
+        with open(f'tmp/draw/{pid}', "rb") as draw_file:
+            draw_base64 = base64.b64encode(draw_file.read()).decode("utf-8")
+
         return jsonify({'status': 1,
                         'image_url': 'http://127.0.0.1:5003/tmp/image/' + pid,
                         'draw_url': 'http://127.0.0.1:5003/tmp/draw/' + pid,
+                        'image_base64' : 'data:image/png;base64,'+image_base64,
+                        'draw_base64' : 'data:image/png;base64,'+draw_base64,
                         'image_info': image_info
                         })
 
