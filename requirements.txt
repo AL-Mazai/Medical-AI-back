@@ -20,7 +20,7 @@ pycuda==2024.1
 pymssql==2.2.5
 PyQt5==5.15.10
 pytools==2023.1.1
-pywin32==305.1
+pywin32==305.0
 scipy==1.11.4
 SimpleITK==2.3.1
 torch~=2.2.2
