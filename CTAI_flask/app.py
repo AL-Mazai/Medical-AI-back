@@ -9,6 +9,7 @@ import core.main
 import base64
 from CTAI_model.net import unet as net
 from hjd.doctor import doctor
+from hjd.AI import AI
 UPLOAD_FOLDER = r'uploads'
 
 
@@ -18,6 +19,7 @@ app.secret_key = 'secret!'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.register_blueprint(doctor)
+app.register_blueprint(AI)
 
 werkzeug_logger = rel_log.getLogger('werkzeug')
 werkzeug_logger.setLevel(rel_log.ERROR)
