@@ -178,4 +178,4 @@ def show_photo(file):
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = model
-    app.run(host='10.103.205.72', port=5000, debug=True)
+    app.run(host='10.103.205.72', port=5003, debug=True)
