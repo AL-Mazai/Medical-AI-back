@@ -16,8 +16,10 @@ def AIGenerate():
     response = client.chat.completions.create(
         model="glm-4",  # 填写需要调用的模型名称
         messages=[
-            {"role": "user", "content": "请用我以下资料生成医疗文档 我的资料其中包含疾病名 患者描述 医生建议,直接根据上述内容给出描述即可 不要有不确定的内容 我是直接要放到网页上的 直接写出内容即可 不要有特殊符号 "},
-            {"role": "user", "content": "疾病诊断名为:"+diagnose_result+"诊断名为:"+illness_description+"医生建议为:"+treatment_plan}
+            {"role": "user", "content": "请用我以下资料生成医疗文档 我的资料其中包含疾病名 患者描述 医生建议 "},
+            {"role": "user", "content": "疾病诊断名为:"+diagnose_result+"诊断名为:"+illness_description+"医生建议为:"+treatment_plan},
+            {"role": "user",
+             "content": ",直接根据上述内容给出描述即可 不要有不确定的内容 我是直接要放到网页上的 直接写出内容即可 不要有特殊符号 不要有类似：‘以下是我给出的诊断文档’这种语言 直接给出回答 "},
         ],
     )
     answer = response.choices[0].message.content
