@@ -18,7 +18,7 @@ from hjd.AI import AI
 UPLOAD_FOLDER = r'uploads'
 
 
-ALLOWED_EXTENSIONS = set(['dcm'])
+ALLOWED_EXTENSIONS = set(['dcm','jpg','jpeg','png'])
 app = Flask(__name__)
 app.secret_key = 'secret!'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -32,7 +32,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 ######################################erunet#################################################
 model = EffB0_UNet()
 PATH = 'core/ERU-Net_liver8_new.pth'
-model.load_state_dict(torch.load(PATH))
+model.load_state_dict(torch.load(PATH, map_location=torch.device('cpu')))
 model.eval()
 transform_img = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -83,10 +83,21 @@ def process_image():
             output_file_path = os.path.join("outputs", "processed_" + filename)
             output_image.save(output_file_path)
 
+            # 将识别出来的文件转换为base64编码
+            with open(f'outputs/processed_{filename}', "rb") as image_file:
+                draw_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+
+            with open(f'uploads/{filename}', "rb") as draw_file:
+                image_base64 = base64.b64encode(draw_file.read()).decode("utf-8")
+
             # 可以选择将处理后的图片作为文件发送回去，或者将其保存在服务器上并提供下载链接
             # 这里仅提供下载链接的逻辑
             return jsonify({"message": "Image processed successfully",
-                            "download_url": "/download_erunet/" + "processed_" + filename}), 200
+                            "image_url":"http://127.0.0.1:5003/download_image/"+filename,
+                            "draw_url": "http://127.0.0.1:5003/download_erunet/" + "processed_" + filename,
+                            'image_base64': 'data:image/png;base64,' + image_base64,
+                            'draw_base64': 'data:image/png;base64,' + draw_base64,
+                            }), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
     else:
@@ -96,7 +107,11 @@ def process_image():
 @app.route('/download_erunet/<filename>')
 def download_file_erunet(filename):
     return send_from_directory("outputs", filename, as_attachment=True)
-######################################################################################
+
+@app.route('/download_image/<filename>')
+def download_file_image(filename):
+    return send_from_directory("uploads", filename, as_attachment=True)
+######################################################################################image
 
 # 添加header解决跨域
 @app.after_request
@@ -178,4 +193,4 @@ def show_photo(file):
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = model
-    app.run(host='10.103.205.72', port=5003, debug=True)
+    app.run(host='127.0.0.1', port=5003, debug=True)

@@ -26,27 +26,55 @@ def AIGenerate():
     print(answer)
     return jsonify(answer)
 
-# if __name__ == '__main__':
-#     # client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 填写您自己的APIKey
-#     # while True:
-#     #     prompt = input("user:")
-#     #     response = client.chat.completions.create(
-#     #         model="glm-4",  # 填写需要调用的模型名称
-#     #         messages=[
-#     #             {"role": "user", "content": prompt}
-#     #         ],
-#     #     )
-#     #     answer = response.choices[0].message.content
-#     #     print("ZhipuAI:", answer)
-#     client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 请填写您自己的APIKey
-#     conversation = []  # 用于保存对话上下文的列表
-#     while True:
-#         prompt = input("user:")
-#         conversation.append({"role": "user", "content": prompt})  # 将用户输入添加到对话上下文中
-#         response = client.chat.completions.create(
-#             model="glm-4",  # 填写需要调用的模型名称
-#             messages=conversation,  # 使用包含对话上下文的消息列表
-#         )
-#         answer = response.choices[0].message.content
-#         print("ZhipuAI:", answer)
-#         conversation.append({"role": "assistant", "content": answer})  # 将助手的回复添加到对话上下文中
+@AI.route('/AITalk',methods=['POST'])
+def AITalk():
+    user_input = request.form.get('user_input', type=str)
+    client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 填写您自己的APIKey
+    conversation = []  # 用于保存对话上下文的列表
+    conversation.append({"role": "user", "content": user_input})  # 将用户输入添加到对话上下文中
+    response = client.chat.completions.create(
+        model="glm-4",  # 填写需要调用的模型名称
+        messages=conversation,  # 使用包含对话上下文的消息列表
+    )
+    answer = response.choices[0].message.content
+    conversation.append({"role": "assistant", "content": answer})  # 将助手的回复添加到对话上下文中
+    return jsonify(answer)
+
+if __name__ == '__main__':
+    # client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 填写您自己的APIKey
+    # while True:
+    #     prompt = input("user:")
+    #     response = client.chat.completions.create(
+    #         model="glm-4",  # 填写需要调用的模型名称
+    #         messages=[
+    #             {"role": "user", "content": prompt}
+    #         ],
+    #     )
+    #     answer = response.choices[0].message.content
+    #     print("ZhipuAI:", answer)
+    # client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 请填写您自己的APIKey
+
+
+    client = ZhipuAI(api_key="596c1d3621e41f40477264b097ed6e22.Q4q3ijf7Ak5dmGiJ")  # 请填写您自己的APIKey
+
+    response = client.chat.completions.create(
+        model="glm-4v",  # 填写需要调用的模型名称
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "这是一张皮肤病的图片，你可以分析并给出诊断结果和治疗方案吗"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": "http://qny.cai142857.cn/ISIC_0012199.jpg"
+                        }
+                    }
+                ]
+            }
+        ]
+    )
+    print(response.choices[0].message)
