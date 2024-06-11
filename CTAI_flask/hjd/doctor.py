@@ -4,26 +4,26 @@ import math
 from flask import Blueprint, jsonify
 from flask import request  # 添加这一行来引入 request 模块
 import mysql.connector
+
 doctor = Blueprint('doctor', __name__)
 
 
-
-
-#获取数据库连接
+# 获取数据库连接
 def get_db_connection():
-
     # 如果连接不存在，则创建一个新的连接
 
     db_connection = mysql.connector.connect(
-            host="116.205.143.194",
-            user="root",
-            password="zzwzzw",
-            database="medical"
+        host="116.205.143.194",
+        user="root",
+        password="zzwzzw",
+        database="medical",
+        auth_plugin="mysql_native_password"
     )
     return db_connection
 
-#医生登录
-@doctor.route('/login',methods=['POST'])
+
+# 医生登录
+@doctor.route('/login', methods=['POST'])
 def doctorLogin():
     username = request.form['username']
     password = request.form['password']
@@ -32,7 +32,7 @@ def doctorLogin():
     cursor = connection.cursor(dictionary=True)
     # 构建 SQL 查询语句
     sql_query = "SELECT * FROM doctor WHERE username=%s and password=%s"
-    cursor.execute(sql_query, (username,password))
+    cursor.execute(sql_query, (username, password))
 
     # 获取查询结果
     res = cursor.fetchall()
@@ -60,16 +60,16 @@ def doctorLogin():
 #     # 将结果转换为 JSON 格式并返回
 #     return jsonify(result)
 
-#获取病人列表（可查询）
+# 获取病人列表（可查询）
 @doctor.route('/getPatients', methods=['GET'])
 def getPatients():
     # 获取搜索关键字，默认为通配符
     keyword = request.args.get('keyword', type=str)
-    if keyword== '': keyword= '%'
+    if keyword == '': keyword = '%'
     # 获取分页参数
     page = request.args.get('page', default=1, type=int)
     page_size = request.args.get('page_size', default=10, type=int)
-    doctor_id=request.args.get('doctorId')
+    doctor_id = request.args.get('doctorId')
 
     offset = (page - 1) * page_size
 
@@ -81,7 +81,7 @@ def getPatients():
         ON patient.patient_id = doctor_patient.patient_id 
         WHERE doctor_patient.doctor_id = %s AND patient.username LIKE %s 
         LIMIT %s OFFSET %s"""
-    cursor.execute(sql_query, (doctor_id,keyword, page_size, offset))
+    cursor.execute(sql_query, (doctor_id, keyword, page_size, offset))
 
     # 获取查询结果
     patients = cursor.fetchall()
@@ -160,7 +160,7 @@ def getDiagnosis():
     # 获取分页参数
     page = request.args.get('page', default=1, type=int)
     page_size = request.args.get('page_size', default=10, type=int)
-    doctorId= request.args.get('doctorId', default=10, type=int)
+    doctorId = request.args.get('doctorId', default=10, type=int)
     offset = (page - 1) * page_size
 
     connection = get_db_connection()
@@ -175,13 +175,15 @@ def getDiagnosis():
         WHERE doctor_id=%s AND status=1
         LIMIT %s OFFSET %s
     """
-    cursor.execute(sql_query, (doctorId,page_size, offset))
+    cursor.execute(sql_query, (doctorId, page_size, offset))
 
     # 获取查询结果
     records = cursor.fetchall()
 
     # 获取总记录数
-    cursor.execute("SELECT COUNT(*) AS total_count FROM diagnose_record JOIN patient ON diagnose_record.patient_id = patient.patient_id WHERE doctor_id=%s AND status=1",(doctorId,)    )
+    cursor.execute(
+        "SELECT COUNT(*) AS total_count FROM diagnose_record JOIN patient ON diagnose_record.patient_id = patient.patient_id WHERE doctor_id=%s AND status=1",
+        (doctorId,))
     total_count = cursor.fetchone()['total_count']
 
     # 计算总页数
@@ -203,11 +205,11 @@ def getDiagnosis():
     # 返回响应
     return jsonify(response_data)
 
+
 @doctor.route('/getDiagnosisDetail', methods=['GET'])
 def getDiagnosisDetail():
     # 获取诊断参数
-    diagnosis_id= request.args.get('diagnosisId', type=int)
-
+    diagnosis_id = request.args.get('diagnosisId', type=int)
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
@@ -231,11 +233,11 @@ def getDiagnosisDetail():
 
     # 构造响应数据
 
-
     # 返回响应
     return jsonify(records)
 
-@doctor.route('/updateDiagnosisDetail',methods=['POST'])
+
+@doctor.route('/updateDiagnosisDetail', methods=['POST'])
 def updateDiagnosisDetail():
     diagnosis_id = request.form.get('diagnosisId', type=int)
     diagnose_result = request.form.get('diagnose_result')
@@ -259,7 +261,8 @@ def updateDiagnosisDetail():
         """
     # 执行更新操作
     cursor.execute(sql_query,
-                   (diagnose_result,illness_description,treatment_plan,original_image_link,mark_image_link,diagnosis_id,))
+                   (diagnose_result, illness_description, treatment_plan, original_image_link, mark_image_link,
+                    diagnosis_id,))
     # 提交事务
     connection.commit()
 
@@ -275,6 +278,7 @@ def updateDiagnosisDetail():
 
     # 返回响应
     return jsonify(response)
+
 
 @doctor.route('/deleteDiagnosisDetail', methods=['PUT'])
 def deleteDiagnosisDetail():
