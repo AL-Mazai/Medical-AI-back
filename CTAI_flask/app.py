@@ -51,17 +51,34 @@ def process_single_image(image_path, model, transform):
 
     return output_array
 
-# def init_model():
-#     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     # model = net.Unet(1, 1).to(device)
-#     model = EffB0_UNet()
-#     path = 'core/ERU-Net_liver8_new.pth'
-#     if torch.cuda.is_available():
-#         model.load_state_dict(torch.load(path))
-#     else:
-#         model.load_state_dict(torch.load(path, map_location='cpu'))
-#     model.eval()
-#     return model
+@app.route('/image_ljk', methods=['POST'])
+def process_image_ljk():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join("uploads", filename)
+        file.save(file_path)
+
+        try:
+            output_image_array = process_single_image(file_path, model, transform_img)
+            output_image = Image.fromarray((output_image_array * 255).astype('uint8'))
+            output_file_path = os.path.join("outputs", "processed_" + filename)
+            output_image.save(output_file_path)
+
+            # 可以选择将处理后的图片作为文件发送回去，或者将其保存在服务器上并提供下载链接
+            # 这里仅提供下载链接的逻辑
+            return jsonify({"message": "Image processed successfully",
+                            "download_url": "/download_erunet/" + "processed_" + filename}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Invalid file"}), 400
 
 @app.route('/image', methods=['POST'])
 def process_image():
@@ -93,8 +110,8 @@ def process_image():
             # 可以选择将处理后的图片作为文件发送回去，或者将其保存在服务器上并提供下载链接
             # 这里仅提供下载链接的逻辑
             return jsonify({"message": "Image processed successfully",
-                            "image_url":"http://127.0.0.1:5003/download_image/"+filename,
-                            "draw_url": "http://127.0.0.1:5003/download_erunet/" + "processed_" + filename,
+                            "image_url":"http://10.103.166.147:5003/download_image/"+filename,
+                            "draw_url": "http://10.103.166.147:5003/download_erunet/" + "processed_" + filename,
                             'image_base64': 'data:image/png;base64,' + image_base64,
                             'draw_base64': 'data:image/png;base64,' + draw_base64,
                             }), 200
@@ -156,8 +173,8 @@ def upload_file():
             draw_base64 = base64.b64encode(draw_file.read()).decode("utf-8")
 
         return jsonify({'status': 1,
-                        'image_url': 'http://127.0.0.1:5003/tmp/image/' + pid,
-                        'draw_url': 'http://127.0.0.1:5003/tmp/draw/' + pid,
+                        'image_url': 'http://10.103.166.147:5003/tmp/image/' + pid,
+                        'draw_url': 'http://10.103.166.147:5003/tmp/draw/' + pid,
                         'image_base64' : 'data:image/png;base64,'+image_base64,
                         'draw_base64' : 'data:image/png;base64,'+draw_base64,
                         'image_info': image_info
@@ -193,4 +210,4 @@ def show_photo(file):
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = model
-    app.run(host='127.0.0.1', port=5003, debug=True)
+    app.run(host='10.103.166.147', port=5003, debug=True)
