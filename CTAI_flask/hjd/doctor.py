@@ -170,7 +170,7 @@ def getDiagnosis():
     sql_query = """
         SELECT diagnose_record.*, patient.age, patient.gender,
                 patient.phone_number, patient.username
-        FROM diagnose_record
+        FROM diagnose_record 
         JOIN patient ON diagnose_record.patient_id = patient.patient_id
         WHERE doctor_id=%s AND status=1
         LIMIT %s OFFSET %s
@@ -179,6 +179,7 @@ def getDiagnosis():
 
     # 获取查询结果
     records = cursor.fetchall()
+
 
     # 获取总记录数
     cursor.execute("SELECT COUNT(*) AS total_count FROM diagnose_record JOIN patient ON diagnose_record.patient_id = patient.patient_id WHERE doctor_id=%s AND status=1",(doctorId,)    )
@@ -197,7 +198,8 @@ def getDiagnosis():
         'page': page,
         'page_size': page_size,
         'total_pages': total_pages,
-        'total_count': total_count
+        'total_count': total_count,
+
     }
 
     # 返回响应
@@ -223,17 +225,34 @@ def getDiagnosisDetail():
     # 获取查询结果
     records = cursor.fetchall()
 
-    # 获取总记录数
+    # print(records)
+    patientId=records[0].get('patient_id')
+    sql_query2 = """
+            select * from allergic_drugs
+        """
 
+    cursor.execute(sql_query2)
+    drugs = cursor.fetchall()
+    sql_query3 = """
+               select drugId from patient_drugs 
+               where patientId=%s
+    """
+
+    cursor.execute(sql_query3,(patientId,))
+    patient_drugs = [row['drugId'] for row in cursor.fetchall()]
     # 关闭游标和连接
     cursor.close()
     connection.close()
 
     # 构造响应数据
 
-
+    response_data = {
+        'drugs': drugs,
+        'records': records,
+        'patient_drugs': patient_drugs
+    }
     # 返回响应
-    return jsonify(records)
+    return jsonify(response_data)
 
 @doctor.route('/updateDiagnosisDetail',methods=['POST'])
 def updateDiagnosisDetail():
@@ -308,3 +327,113 @@ def deleteDiagnosisDetail():
 
     # 返回响应
     return jsonify(response)
+
+@doctor.route('/addAllergicDrug', methods=['POST'])
+def addAllergicDrug():
+    # 获取诊断参数
+    patient_id = request.form.get('patientId', type=int)
+    drug_id = request.form.get('drugId', type=int)
+    print(request.form)
+    # 获取数据库连接和游标
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # 构建 SQL 更新语句，将状态标记为 0
+    sql_query = """
+        insert into patient_drugs (patientId,drugId) values (%s,%s)
+    """
+    # 执行更新操作
+    cursor.execute(sql_query, (patient_id,drug_id))
+    # 提交事务
+    connection.commit()
+
+    # 检查更新是否成功
+    if cursor.rowcount == 1:
+        response = {"message": "Insert successfully"}
+    else:
+        response = {"message": "Insert Failed"}
+
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    # 返回响应
+    return jsonify(response)
+
+@doctor.route('/deleteAllergicDrug', methods=['POST'])
+def deleteAllergicDrug():
+    # 获取诊断参数
+    patient_id = request.form.get('patientId', type=int)
+    drug_id = request.form.get('drugId', type=int)
+
+    # 获取数据库连接和游标
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    # 构建 SQL 更新语句，将状态标记为 0
+    sql_query = """
+        delete from patient_drugs where patientId=%s and drugId=%s
+    """
+    # 执行更新操作
+    cursor.execute(sql_query, (patient_id,drug_id))
+    # 提交事务
+    connection.commit()
+
+    # 检查更新是否成功
+    if cursor.rowcount == 1:
+        response = {"message": "delete successfully"}
+    else:
+        response = {"message": "delete Failed"}
+
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    # 返回响应
+    return jsonify(response)
+
+@doctor.route('/getAllDiseases', methods=['GET'])
+def getAllDiseases():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # 构建 SQL 查询语句，使用 JOIN 连接相关表
+    sql_query = """
+        SELECT * FROM diseases
+        
+    """
+    cursor.execute(sql_query)
+
+    # 获取查询结果
+    records = cursor.fetchall()
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+
+    return jsonify(records)
+
+
+@doctor.route('/getDiseasesHistory', methods=['POST'])
+def getDiseasesHistory():
+    patient_id = request.form.get('patientId', type=int)
+    diagnose_id = request.form.get('diagnoseId', type=int)
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # 构建 SQL 查询语句，使用 JOIN 连接相关表
+    sql_query = """
+            SELECT * FROM diagnose_record
+            where patient_id=%s and diagnose_record_id!=%s
+
+        """
+    cursor.execute(sql_query, (patient_id, diagnose_id))
+
+
+    # 获取查询结果
+    records = cursor.fetchall()
+    # 关闭游标和连接
+    cursor.close()
+    connection.close()
+
+    return jsonify(records)
