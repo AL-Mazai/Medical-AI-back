@@ -110,8 +110,8 @@ def process_image():
             # 可以选择将处理后的图片作为文件发送回去，或者将其保存在服务器上并提供下载链接
             # 这里仅提供下载链接的逻辑
             return jsonify({"message": "Image processed successfully",
-                            "image_url":"http://10.103.166.147:5003/download_image/"+filename,
-                            "draw_url": "http://10.103.166.147:5003/download_erunet/" + "processed_" + filename,
+                            "image_url":"http://localhost:5003/download_image/"+filename,
+                            "draw_url": "http://localhost:5003/download_erunet/" + "processed_" + filename,
                             'image_base64': 'data:image/png;base64,' + image_base64,
                             'draw_base64': 'data:image/png;base64,' + draw_base64,
                             }), 200
@@ -210,4 +210,4 @@ def show_photo(file):
 if __name__ == '__main__':
     with app.app_context():
         current_app.model = model
-    app.run(host='10.103.166.147', port=5003, debug=True)
+    app.run(host='127.0.0.1', port=5000, debug=True)
